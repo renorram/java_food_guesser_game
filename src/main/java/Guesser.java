@@ -35,11 +35,15 @@ final public class Guesser {
             return;
         }
 
-        loopFoodTypes();
+        boolean foundFood = lookUpFoodType();
+        if (!foundFood) {
+            this.askForNewGuess();
+        }
+
         this.initGuess();
     }
 
-    public void loopFoodTypes() {
+    public boolean lookUpFoodType() {
         HashSet<FoodType> foodTypes = this.foodCollection.getFoodTypes();
         for (FoodType foodType : foodTypes) {
             int result = JOptionPane.showConfirmDialog(
@@ -50,14 +54,14 @@ final public class Guesser {
             );
 
             if (result == 0) {
-                this.loopFoodByType(foodType);
+                return this.lookUpFoodByType(foodType);
             }
         }
 
-        this.askForNewGuess();
+        return false;
     }
 
-    public void loopFoodByType(FoodType foodType) {
+    public boolean lookUpFoodByType(FoodType foodType) {
         HashSet<Food> foods = this.foodCollection.findFoodByType(foodType);
         for (Food food : foods) {
             int result = JOptionPane.showConfirmDialog(
@@ -69,11 +73,11 @@ final public class Guesser {
 
             if (result == 0) {
                 JOptionPane.showMessageDialog(null, "Acertei!");
-                return;
+                return true;
             }
         }
 
-        this.askForNewGuess();
+        return false;
     }
 
     public void askForNewGuess() {
