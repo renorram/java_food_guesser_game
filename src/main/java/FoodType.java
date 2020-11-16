@@ -2,7 +2,7 @@ import exception.InvalidFoodTypeNameException;
 
 import java.util.Objects;
 
-final public class FoodType {
+final public class FoodType implements Comparable<FoodType> {
     private final String name;
 
     FoodType(String name) {
@@ -37,5 +37,10 @@ final public class FoodType {
     @Override
     public int hashCode() {
         return Objects.hash(name.toLowerCase());
+    }
+
+    @Override
+    public int compareTo(FoodType foodType) {
+        return name.compareTo(foodType.name);
     }
 }

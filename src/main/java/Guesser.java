@@ -3,6 +3,7 @@ import exception.InvalidFoodTypeNameException;
 
 import javax.swing.*;
 import java.util.HashSet;
+import java.util.TreeSet;
 
 final public class Guesser {
 
@@ -17,7 +18,7 @@ final public class Guesser {
     }
 
     public void initGuess() {
-        String[] options = {"Adivinhar..", "Sair"};
+        String[] options = {"OK"};
 
         int i = JOptionPane.showOptionDialog(
                 null,
@@ -30,22 +31,21 @@ final public class Guesser {
                 options[0]
         );
 
-        if (i == 1) {
-            JOptionPane.showMessageDialog(null, "Até mais!", DEFAULT_TITLE, JOptionPane.INFORMATION_MESSAGE);
-            return;
+        if (i == 0) {
+            lookUpFoodType();
         }
-
-        boolean foundFood = lookUpFoodType();
-        if (!foundFood) {
-            this.askForNewGuess();
-        }
-
-        this.initGuess();
     }
 
-    public boolean lookUpFoodType() {
-        HashSet<FoodType> foodTypes = this.foodCollection.getFoodTypes();
-        for (FoodType foodType : foodTypes) {
+    public void lookUpFoodType() {
+        TreeSet<FoodType> foodTypeTreeSet = new TreeSet<>(this.foodCollection.getFoodTypes());
+        FoodType last = foodTypeTreeSet.last();
+
+        for (FoodType foodType : foodTypeTreeSet) {
+            if (foodType == last) {
+                this.lookUpFoodByType(foodType);
+                return;
+            }
+
             int result = JOptionPane.showConfirmDialog(
                     null,
                     String.format("A comida que você pensou é um(a) %s?", foodType.getName()),
@@ -54,16 +54,17 @@ final public class Guesser {
             );
 
             if (result == 0) {
-                return this.lookUpFoodByType(foodType);
+                this.lookUpFoodByType(foodType);
+                return;
             }
         }
-
-        return false;
     }
 
-    public boolean lookUpFoodByType(FoodType foodType) {
+    public void lookUpFoodByType(FoodType foodType) {
         HashSet<Food> foods = this.foodCollection.findFoodByType(foodType);
+        Food lastGuessed = null;
         for (Food food : foods) {
+            lastGuessed = food;
             int result = JOptionPane.showConfirmDialog(
                     null,
                     String.format("A comida que você pensou é %s?", food.getName()),
@@ -73,21 +74,19 @@ final public class Guesser {
 
             if (result == 0) {
                 JOptionPane.showMessageDialog(null, "Acertei!");
-                return true;
+                initGuess();
+                return;
             }
         }
 
-        return false;
+        askForNewGuess(lastGuessed);
     }
 
-    public void askForNewGuess() {
-        String foodTypeName = JOptionPane.showInputDialog("Que tipo de comida você pensou?");
+    public void askForNewGuess(Food lastGuessed) {
         String foodName = JOptionPane.showInputDialog("Qual o nome da comida que você pensou?");
-
         while (true) {
             try {
-                Food food = new Food(foodName, foodTypeName);
-                this.foodCollection.add(food);
+                Food.validateName(foodName);
                 break;
             } catch (InvalidFoodNameException e) {
                 JOptionPane.showMessageDialog(
@@ -98,6 +97,20 @@ final public class Guesser {
                 );
 
                 foodName = JOptionPane.showInputDialog("Digite novamente, qual o nome da comida que você pensou??");
+            }
+        }
+
+        String foodTypeName = JOptionPane.showInputDialog(String.format(
+                "%s é ______ mas %s não.",
+                foodName,
+                lastGuessed.getName()
+        ));
+
+        while (true) {
+            try {
+                Food food = new Food(foodName, foodTypeName);
+                this.foodCollection.add(food);
+                break;
             } catch (InvalidFoodTypeNameException e) {
                 JOptionPane.showMessageDialog(
                         null,
@@ -106,16 +119,15 @@ final public class Guesser {
                         JOptionPane.ERROR_MESSAGE
                 );
 
-                foodTypeName = JOptionPane.showInputDialog("Digite novamente, que tipo de comida você pensou?");
+                foodTypeName = JOptionPane.showInputDialog(String.format(
+                        "A comida %s é ______ mas %s não é?",
+                        foodName,
+                        lastGuessed.getName()
+                ));
             }
         }
 
-        JOptionPane.showMessageDialog(
-                null,
-                "Guesser atualizado! pressione ok para jogar novamente ;)",
-                DEFAULT_TITLE,
-                JOptionPane.INFORMATION_MESSAGE
-        );
+        initGuess();
     }
 
     public void addGuess(String foodName, String foodType) {

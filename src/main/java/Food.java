@@ -17,7 +17,7 @@ final public class Food {
         this(name, new FoodType(foodType));
     }
 
-    private static void validateName(String name) throws InvalidFoodNameException {
+    public static void validateName(String name) throws InvalidFoodNameException {
         if (name == null) {
             throw new InvalidFoodNameException("");
         }
